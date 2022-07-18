@@ -5,8 +5,8 @@ import java.net.Socket;
 
 public class ClientSide 
 {	
-	static int port = 9999;
-	static String ip = "localhost";
+	static int port = Constants.port;
+	static String ip = Constants.ip;
 	
 	public static void main(String[] args)
 	{	
@@ -20,7 +20,7 @@ public class ClientSide
 		
 		if(choiceVar == 1)
 		{	
-			String pathOfFile = "C:\\Users\\Manish Sharma\\Documents\\abc.txt";
+			String pathOfFile = Constants.clientFilePath;
 //			System.out.print("Enter Path of File : ");
 //			pathOfFile = sc.next();
 			try 
@@ -36,7 +36,6 @@ public class ClientSide
 		else if(choiceVar == 2)
 		{	
 			String fileName = "abc.txt";
-//			System.out.print("Enter File Name With Extension : ");
 //			fileName = sc.next();
 			try 
 			{
@@ -71,13 +70,12 @@ public class ClientSide
 		dataOutputStreamObj.write(fileNameInBytes); // sending fileName
 		
 		// Receiving file and creating a copy on client side
-		File fileObj = new File("C:\\Users\\Manish Sharma\\Downloads\\" + "downloaded_" + fileName);
+		File fileObj = new File(Constants.clientDownloadingPath);
 		DataInputStream dataInputStreamObj = new DataInputStream(clientSocket.getInputStream());
 		
 		// Receiving file
 		int fileContentLen = dataInputStreamObj.readInt();
 		
-//		System.out.println("content Len : " + fileContentLen);
 		
 		byte[] fileContentInBytes = new byte[fileContentLen];
 		dataInputStreamObj.readFully(fileContentInBytes, 0, fileContentLen);
