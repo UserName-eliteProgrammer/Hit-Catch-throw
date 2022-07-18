@@ -71,7 +71,7 @@ public class ClientSide
 		dataOutputStreamObj.write(fileNameInBytes); // sending fileName
 		
 		// Receiving file and creating a copy on client side
-		File fileObj = new File("C:\\Users\\Manish Sharma\\Downloads\\" + fileName + "_downloaded");
+		File fileObj = new File("C:\\Users\\Manish Sharma\\Downloads\\" + "downloaded_" + fileName);
 		DataInputStream dataInputStreamObj = new DataInputStream(clientSocket.getInputStream());
 		
 		// Receiving file
