@@ -77,7 +77,7 @@ public class ClientSide
 		// Receiving file
 		int fileContentLen = dataInputStreamObj.readInt();
 		
-		System.out.println("content Len : " + fileContentLen);
+//		System.out.println("content Len : " + fileContentLen);
 		
 		byte[] fileContentInBytes = new byte[fileContentLen];
 		dataInputStreamObj.readFully(fileContentInBytes, 0, fileContentLen);
@@ -109,16 +109,16 @@ public class ClientSide
 		fileInputStreamObj.read(contentOfFileInBytes);
 		
 		// Socket and sending file
-				Socket clientSocket = new Socket(ip, port);
-				DataOutputStream dataOutputStreamObj = new DataOutputStream(clientSocket.getOutputStream());  
+		Socket clientSocket = new Socket(ip, port);
+		DataOutputStream dataOutputStreamObj = new DataOutputStream(clientSocket.getOutputStream());  
 				
-				dataOutputStreamObj.writeInt(1); // telling server to our choice
+		dataOutputStreamObj.writeInt(1); // telling server to our choice
 				
-				dataOutputStreamObj.writeInt(fileNameInBytes.length); // sending size of title of file to outputStream
-				dataOutputStreamObj.write(fileNameInBytes); // sending content of file to outputStream
-				dataOutputStreamObj.writeInt(contentOfFileInBytes.length); // sending content length of file to outputStream
-				dataOutputStreamObj.write(contentOfFileInBytes); // sending content of file to outputStream
+		dataOutputStreamObj.writeInt(fileNameInBytes.length); // sending size of title of file to outputStream
+		dataOutputStreamObj.write(fileNameInBytes); // sending content of file to outputStream
+		dataOutputStreamObj.writeInt(contentOfFileInBytes.length); // sending content length of file to outputStream
+		dataOutputStreamObj.write(contentOfFileInBytes); // sending content of file to outputStream
 				
-				clientSocket.close();
+		clientSocket.close();
 	}
 }

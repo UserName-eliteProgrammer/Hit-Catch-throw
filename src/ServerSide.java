@@ -46,14 +46,14 @@ public class ServerSide
 			String pathOfStorage = "C:\\Users\\Manish Sharma\\Downloads\\";
 			fileNameLen = dataInputStreamObj.readInt();
 			
-			System.out.println("Len of file " + fileNameLen);
+//			System.out.println("Len of file " + fileNameLen);
 			
 			byte[] fileNameInBytes = new byte[fileNameLen];
 			
 			// reading name from input stream
 			dataInputStreamObj.readFully(fileNameInBytes, 0, fileNameLen);
 			String fileName = new String(fileNameInBytes);
-			System.out.println("File Name : " + fileName);
+//			System.out.println("File Name : " + fileName);
 			
 			// checking file exists or not
 			File fileObj = new File(pathOfStorage + fileName);
