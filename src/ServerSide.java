@@ -9,22 +9,25 @@ public class ServerSide
 		System.out.println("Server");
 		int portNum = Constants.port, choice;
 		ServerSocket serverSocketObj = new ServerSocket(portNum);
-		Socket serverSideSocket =  serverSocketObj.accept();
-		DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
 		
-		choice = dataInputStreamObj.readInt();
-		
-		if(choice == 1)
-		{
-			// receiving file
-			recievingFile(serverSideSocket);
+		while(true)
+		{	
+			Socket serverSideSocket =  serverSocketObj.accept();
+			DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
+			
+			choice = dataInputStreamObj.readInt();
+			
+			if(choice == 1)
+			{
+				// receiving file
+				recievingFile(serverSideSocket);
+			}
+			else // wrong choice is tackled at client side
+			{
+				sendFile(serverSideSocket);
+			}
+			serverSideSocket.close();	
 		}
-		else // wrong choice is tackled at client side
-		{
-			sendFile(serverSideSocket);
-		}
-		serverSideSocket.close();
-		serverSocketObj.close();
 	}
 	
 	
@@ -42,12 +45,18 @@ public class ServerSide
 			
 			
 			// dealing with content of file
+
 			fileContentLen = dataInputStreamObj.readInt();
 			byte[] fileContentInBytes = new byte[fileContentLen];
 			dataInputStreamObj.readFully(fileContentInBytes, 0, fileContentLen);
 			
+			
+			
+			
 			// creating a file at server end and writing it
-			File fileRecieved = new File(Constants.serverStoragePath);
+			String fileName = new String(fileNameInBytes);
+			
+			File fileRecieved = new File(Constants.serverStoragePath + fileName);
 			FileOutputStream fileOutputStreamObj = new FileOutputStream(fileRecieved);
 			fileOutputStreamObj.write(fileContentInBytes);
 			fileOutputStreamObj.close();
@@ -59,7 +68,6 @@ public class ServerSide
 		// send file
 		
 		DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
-		String pathOfStorage = Constants.serverStoragePath;
 		int fileNameLen = dataInputStreamObj.readInt();
 					
 				
@@ -71,7 +79,7 @@ public class ServerSide
 
 					
 		// checking file exists or not
-		File fileObj = new File(Constants.serverStoragePath);
+		File fileObj = new File(Constants.serverStoragePath + fileName);
 		if(fileObj.exists() == true)
 		{
 			int contentLen = (int)fileObj.length();
