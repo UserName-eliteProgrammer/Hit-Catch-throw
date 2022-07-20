@@ -1,108 +1,71 @@
 import java.io.*;
 import java.net.*;
 
-
 public class ServerSide 
 {
+	static int port = Constants.port;
 	public static void main(String[] args) throws Exception
-	{
+	{	
 		System.out.println("Server");
-		int portNum = Constants.port, choice;
-		ServerSocket serverSocketObj = new ServerSocket(portNum);
-		
+		ServerSocket serverSocketObj = new ServerSocket(port);
 		while(true)
 		{	
-			Socket serverSideSocket =  serverSocketObj.accept();
-			DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
-			
-			choice = dataInputStreamObj.readInt();
-			
-			if(choice == 1)
-			{
-				// receiving file
-				recievingFile(serverSideSocket);
-			}
-			else // wrong choice is tackled at client side
-			{
-				sendFile(serverSideSocket);
-			}
-			serverSideSocket.close();	
+			receivingRequest(serverSocketObj);
 		}
 	}
 	
-	
-	private static void recievingFile(Socket serverSideSocket) throws Exception
-	{	
-		int fileNameLen, fileContentLen;
-		DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
-		
-		fileNameLen = dataInputStreamObj.readInt();
-		if(fileNameLen > 0)
-		{
-			// dealing with file title
-			byte[] fileNameInBytes = new byte[fileNameLen];
-			dataInputStreamObj.readFully(fileNameInBytes, 0, fileNameLen); // read data from input stream upTo given length
-			
-			
-			// dealing with content of file
-
-			fileContentLen = dataInputStreamObj.readInt();
-			byte[] fileContentInBytes = new byte[fileContentLen];
-			dataInputStreamObj.readFully(fileContentInBytes, 0, fileContentLen);
-			
-			
-			
-			
-			// creating a file at server end and writing it
-			String fileName = new String(fileNameInBytes);
-			
-			File fileRecieved = new File(Constants.serverStoragePath + fileName);
-			FileOutputStream fileOutputStreamObj = new FileOutputStream(fileRecieved);
-			fileOutputStreamObj.write(fileContentInBytes);
-			fileOutputStreamObj.close();
-		}
-	}
-	
-	private static void sendFile(Socket serverSideSocket) throws Exception
+	public static void receivingRequest(ServerSocket serverSocketObj) throws Exception
 	{
-		// send file
+		Socket serverSideSocket = serverSocketObj.accept();
+		ObjectOutputStream outputStream = new ObjectOutputStream(serverSideSocket.getOutputStream());
+		ObjectInputStream inputStream = new ObjectInputStream(serverSideSocket.getInputStream());
 		
-		DataInputStream dataInputStreamObj = new DataInputStream(serverSideSocket.getInputStream());
-		int fileNameLen = dataInputStreamObj.readInt();
-					
-				
-		byte[] fileNameInBytes = new byte[fileNameLen];
-					
-		// reading name from input stream
-		dataInputStreamObj.readFully(fileNameInBytes, 0, fileNameLen);
-		String fileName = new String(fileNameInBytes);
-
-					
-		// checking file exists or not
-		File fileObj = new File(Constants.serverStoragePath + fileName);
-		if(fileObj.exists() == true)
+		Request data = (Request)inputStream.readObject();
+		if(data.choice == 1)
 		{
-			int contentLen = (int)fileObj.length();
+			// Receive file
+			receiveFile(data, inputStream);
+		}
+		else
+		{
+			sendFile(data, outputStream);
+		}
+	}
+	
+	
+	public static void receiveFile(Request data, ObjectInputStream inputStream) throws Exception
+	{
+		String fileName = data.fileName;
+		String fileContent = data.fileContent;
+		
+		
+		File newFile = new File(Constants.serverStoragePath + fileName);
+		FileOutputStream fileOutputStream = new FileOutputStream(newFile);
+		
+		fileOutputStream.write(fileContent.getBytes());
+	}
+	
+	public static void sendFile(Request data, ObjectOutputStream outputStream) throws Exception
+	{
+		// sendFile
+		File file = new File(Constants.serverStoragePath + data.fileName);
+		if(file.exists() == true)
+		{	
+			byte[] fileContentInBytes = new byte[(int)(file.length())];
+			FileInputStream fileInpStream = new FileInputStream(file);
+			fileInpStream.read(fileContentInBytes);
 						
-
+// creating request object which contains info about file which have to send
+			Request fileToSend = new Request(0, data.fileName, new String(fileContentInBytes));
 						
-			FileInputStream fileInpStreamObj = new FileInputStream(fileObj.getAbsolutePath());
-						
-			// filling array with content
-			byte[] contentOfFileInBytes = new byte[contentLen];
-			fileInpStreamObj.read(contentOfFileInBytes);
-						
-			// send file content
-			DataOutputStream dataOutputStreamObj = new DataOutputStream(serverSideSocket.getOutputStream());
-						
-			dataOutputStreamObj.writeInt(contentLen);
-			System.out.println(contentLen);
-			dataOutputStreamObj.write(contentOfFileInBytes);
+				// sending object to client
+			outputStream.writeObject(fileToSend);
 						
 		}
-		else 
+		else
 		{
-			System.out.println("File Do not exist at Server Side");
+			System.out.println("File Not Exist");
 		}
+
 	}
 }

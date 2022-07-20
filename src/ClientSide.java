@@ -1,125 +1,86 @@
-import java.util.*;
 import java.io.*;
 import java.net.Socket;
-
+import java.util.Scanner;
 
 public class ClientSide 
 {	
-	static int port = Constants.port;
-	static String ip = Constants.ip;
-	
-	public static void main(String[] args)
+	public static void main(String[] args) throws Exception
 	{	
-		// choice making
-		System.out.println("Client\n\n");
-		int choiceVar;
-		do
+		System.out.println("Client");
+		int port = Constants.port, choice;
+		String ip = Constants.ip;
+		while(true)
 		{	
-			System.out.println("Make Your Choice : Press 1 for Sending, Press 2 For Downloading.");
-			Scanner scn = new Scanner(System.in);
+			Socket clientSocket = new Socket(ip, port);
+			Scanner sc = new Scanner(System.in);
+			System.out.println("Enter Your Choice - 1 For Sending File and 2 For Downloading File : ");
 			
-					
-			choiceVar = scn.nextInt();
-			
-			if(choiceVar == 1)
-			{				
-				try 
-				{
-					sendFile();
-				} 
-				catch (Exception e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			else if(choiceVar == 2)
-			{	
-				try 
-				{
-					download();
-				} 
-				catch (Exception e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			else
-			{
-				System.out.println("Invalid Choice");
-				break;
-			}
-		}while(true);
+			choice = sc.nextInt();
+			sendReq(choice, clientSocket);
+		}
 	}
 	
-	private static void download() throws Exception
-	{	
-		// creating socket and outPutstream
-		Socket clientSocket = new Socket(ip, port);
-		DataOutputStream dataOutputStreamObj = new DataOutputStream(clientSocket.getOutputStream());
-		Scanner sc = new Scanner(System.in);
-		
-		// sending file info
-		String fileName = sc.next();
-		
-		byte[] fileNameInBytes = new byte[fileName.length()];
-		
-		fileNameInBytes = fileName.getBytes();
-			
-		dataOutputStreamObj.writeInt(2); // telling server our choice
-		dataOutputStreamObj.writeInt(fileNameInBytes.length); // sending size of fileName
-		dataOutputStreamObj.write(fileNameInBytes); // sending fileName
-		
-		// Receiving file and creating a copy on client side
-		File fileObj = new File(Constants.clientDownloadingPath + fileName);
-		DataInputStream dataInputStreamObj = new DataInputStream(clientSocket.getInputStream());
-		
-		// Receiving file
-		int fileContentLen = dataInputStreamObj.readInt();
-
-		
-		
-		byte[] fileContentInBytes = new byte[fileContentLen];
-		dataInputStreamObj.readFully(fileContentInBytes, 0, fileContentLen);
-		
-		// writing file
-		FileOutputStream fileOutputStreamObj = new FileOutputStream(fileObj);
-		fileOutputStreamObj.write(fileContentInBytes);
-		fileOutputStreamObj.close();
-		
-		clientSocket.close();
+	
+	public static void sendReq(int choice, Socket clientSocket) throws Exception
+	{
+		if(choice == 1)
+		{
+			sendFile(clientSocket);
+		}
+		else if(choice == 2)
+		{
+			receiveFile(clientSocket);
+		}
+		else
+		{
+			System.out.println("Invalid Choice");
+		}
 	}
 	
-	private static void sendFile() throws Exception
+	public static void sendFile(Socket clientSocket)
 	{	
-		// file which to be sent
+		
 		Scanner sc = new Scanner(System.in);
-		System.out.print("Enter Name of File : ");
-		String fileName = sc.nextLine();
+		System.out.println("Enter file Name : ");
+		String name = sc.nextLine();
+		System.out.println("Enter Content : ");
+		String content = sc.nextLine();
+		Request data = new Request(1, name, content);
+		ObjectOutputStream outputStream;
+		try 
+		{
+			outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+			outputStream.writeObject(data);
+			System.out.println("File Sent Successfully!!");
+		} catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			System.out.println("Something Went Wrong");
+			e.printStackTrace();
+		}
 		
-		System.out.println("Enter Text For File : ");
-		String contentOfFile = sc.nextLine();
+	}
+	
+	
+	public static void receiveFile(Socket clientSocket) throws Exception
+	{
+		ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+		ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
+		Scanner sc = new Scanner(System.in);
 		
-		byte[] fileNameInBytes = new byte[(fileName.length())];
-		byte[] contentOfFileInBytes = new byte[contentOfFile.length()];
-				
-				
-		// filling byte array with fileName
-		fileNameInBytes = fileName.getBytes();
-		contentOfFileInBytes  = contentOfFile.getBytes();
-						
-		// Socket and sending file
-		Socket clientSocket = new Socket(ip, port);
-		DataOutputStream dataOutputStreamObj = new DataOutputStream(clientSocket.getOutputStream());  
-				
-		dataOutputStreamObj.writeInt(1); // telling server to our choice
-				
-		dataOutputStreamObj.writeInt(fileNameInBytes.length); // sending size of title of file to outputStream
-		dataOutputStreamObj.write(fileNameInBytes); // sending content of file to outputStream
-		dataOutputStreamObj.writeInt(contentOfFileInBytes.length); // sending content length of file to outputStream
-		dataOutputStreamObj.write(contentOfFileInBytes); // sending content of file to outputStream
-				
-		clientSocket.close();
+		System.out.println("Enter file Name : ");
+		String name = sc.nextLine();
+		
+		Request data = new Request(2, name, "");
+		// sending info
+		outputStream.writeObject(data);
+		
+		
+		// receiving file
+		Request receivedData = (Request)inputStream.readObject();
+		File fileToBeDownloaded = new File(Constants.clientStoragePath + receivedData.fileName);
+		
+		FileOutputStream fileOutputStream = new FileOutputStream(fileToBeDownloaded);
+		fileOutputStream.write((receivedData.fileContent).getBytes());
 	}
 }
